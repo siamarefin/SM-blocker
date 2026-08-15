@@ -3,32 +3,40 @@
   "name": "SM Blocker",
   "version": "1.0.0",
   "description": "Blocks Facebook after 5 minutes.",
+
   "permissions": [
     "storage",
     "alarms"
   ],
+
   "host_permissions": [
-    "https://www.facebook.com/*",
-    "https://www.youtube.com/*",
-    "https://www.google.com/*"
+    "<all_urls>"
   ],
+
   "background": {
     "service_worker": "background.js",
     "type": "module"
-    },
+  },
+
   "content_scripts": [
-  {
-    "matches": [
-      "https://www.facebook.com/*",
-      "https://www.youtube.com/*",
-      "https://www.google.com/*"
-    ],
-    "js": [
-      "services/imageBlur.js",
-      "content.js"
-    ]
-  }
-],
+    {
+      "matches": [
+        "https://www.facebook.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "services/imageBlur.js"
+      ]
+    }
+  ],
+
   "action": {
     "default_popup": "popup.html"
   }

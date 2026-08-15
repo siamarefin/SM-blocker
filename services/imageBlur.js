@@ -2,7 +2,13 @@ const BLUR_CLASS = "sm-media-blur";
 
 let observer = null;
 
+
+// =========================
+// STYLE
+// =========================
+
 function addBlurStyle() {
+
   if (document.getElementById("sm-media-blur-style")) {
     return;
   }
@@ -23,6 +29,11 @@ function addBlurStyle() {
   document.head.appendChild(style);
 }
 
+
+// =========================
+// BLUR
+// =========================
+
 function blurMedia() {
 
   document.querySelectorAll(
@@ -32,7 +43,13 @@ function blurMedia() {
     element.classList.add(BLUR_CLASS);
 
   });
+
 }
+
+
+// =========================
+// REMOVE BLUR
+// =========================
 
 function removeBlur() {
 
@@ -46,6 +63,11 @@ function removeBlur() {
 
 }
 
+
+// =========================
+// OBSERVER
+// =========================
+
 function startObserver() {
 
   if (observer) {
@@ -56,7 +78,7 @@ function startObserver() {
     blurMedia();
   });
 
-  observer.observe(document.body, {
+  observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
     attributes: true,
@@ -69,6 +91,11 @@ function startObserver() {
 
 }
 
+
+// =========================
+// STOP OBSERVER
+// =========================
+
 function stopObserver() {
 
   if (!observer) {
@@ -76,9 +103,15 @@ function stopObserver() {
   }
 
   observer.disconnect();
+
   observer = null;
 
 }
+
+
+// =========================
+// PUBLIC API
+// =========================
 
 window.imageBlur = {
 
@@ -101,3 +134,49 @@ window.imageBlur = {
   }
 
 };
+
+
+// =========================
+// READ SETTING
+// =========================
+
+chrome.storage.local.get(
+  "imageBlurEnabled",
+  (data) => {
+
+    if (data.imageBlurEnabled === true) {
+
+      window.imageBlur.enable();
+
+    }
+
+  }
+);
+
+
+// =========================
+// WATCH SETTING
+// =========================
+
+chrome.storage.onChanged.addListener(
+  (changes, areaName) => {
+
+    if (
+      areaName !== "local" ||
+      !changes.imageBlurEnabled
+    ) {
+      return;
+    }
+
+    if (changes.imageBlurEnabled.newValue === true) {
+
+      window.imageBlur.enable();
+
+    } else {
+
+      window.imageBlur.disable();
+
+    }
+
+  }
+);

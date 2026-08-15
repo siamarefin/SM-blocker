@@ -15,8 +15,8 @@ import {
 } from "./services/usageTracker.js";
 
 
-const USAGE_TIME = 60 * 1000;          // Testing: 5 seconds
-const BLOCK_TIME = 60 * 1000;    // 1 hour
+const USAGE_TIME =  5 * 60 * 1000;
+const BLOCK_TIME = 3 * 60 * 1000;
 
 
 function isFacebook(url) {
@@ -161,31 +161,19 @@ chrome.tabs.onUpdated.addListener(
 // ALARM
 // -------------------------
 
-chrome.alarms.onAlarm.addListener(
-  async (alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
 
-    if (alarm.name !== "usageTimer") {
-      return;
-    }
-
-
-    // VERY IMPORTANT:
-    // Check Facebook is STILL active
+  // Facebook usage completed
+  if (alarm.name === "usageTimer") {
 
     const activeTab = await getActiveTab();
 
     if (!activeTab || !isFacebook(activeTab.url)) {
-
       await resetFacebookSession();
-
       return;
     }
 
-
-    // 5 continuous minutes completed
-
     await finishSession();
-
 
     await setData({
       state: "BLOCKED",
@@ -193,25 +181,36 @@ chrome.alarms.onAlarm.addListener(
       usageStartedAt: null
     });
 
-
     await createTimer(
       "blockTimer",
       BLOCK_TIME
     );
 
-
-    const facebookTabs = await chrome.tabs.query({
+    const tabs = await chrome.tabs.query({
       url: ["https://www.facebook.com/*"]
     });
 
-
-    for (const tab of facebookTabs) {
-      chrome.tabs.reload(tab.id);
+    for (const tab of tabs) {
+      await chrome.tabs.reload(tab.id);
     }
 
+    return;
   }
-);
 
+
+  // 1 hour block finished
+  if (alarm.name === "blockTimer") {
+
+    await setData({
+      state: "ACTIVE",
+      blockedUntil: null,
+      usageStartedAt: null
+    });
+
+    return;
+  }
+
+});
 
 // -------------------------
 // BLOCK FINISHED
@@ -232,3 +231,20 @@ chrome.alarms.onAlarm.addListener(
 
   }
 );
+
+chrome.runtime.onInstalled.addListener(async () => {
+
+  // Clear all old alarms
+  await chrome.alarms.clearAll();
+
+  await setData({
+    enabled: true,
+    state: "ACTIVE",
+    usageStartedAt: null,
+    blockedUntil: null,
+    today: new Date().toISOString().split("T")[0],
+    totalUsage: 0,
+    imageBlurEnabled: false
+  });
+
+});

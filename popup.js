@@ -3,13 +3,26 @@ const usage = document.getElementById("usage");
 const imageBlur = document.getElementById("imageBlur");
 
 
+// =========================
+// FORMAT TIME
+// =========================
 
 function formatTime(milliseconds) {
-  const totalSeconds = Math.floor(milliseconds / 1000);
 
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const totalSeconds =
+    Math.floor(milliseconds / 1000);
+
+  const hours =
+    Math.floor(totalSeconds / 3600);
+
+  const minutes =
+    Math.floor(
+      (totalSeconds % 3600) / 60
+    );
+
+  const seconds =
+    totalSeconds % 60;
+
 
   if (hours > 0) {
     return `${hours}h ${minutes}m ${seconds}s`;
@@ -22,7 +35,13 @@ function formatTime(milliseconds) {
   return `${seconds}s`;
 }
 
+
+// =========================
+// UPDATE STATUS
+// =========================
+
 async function updateStatus() {
+
   const data = await chrome.storage.local.get([
     "enabled",
     "state",
@@ -30,71 +49,94 @@ async function updateStatus() {
     "usageStartedAt"
   ]);
 
+
+  // Status
+
   if (data.enabled) {
-    status.textContent = `Status: ${data.state}`;
+
+    status.textContent =
+      `Status: ${data.state}`;
+
   } else {
-    status.textContent = "Status: OFF";
+
+    status.textContent =
+      "Status: OFF";
+
   }
 
-  let totalUsage = data.totalUsage || 0;
 
-  // Include current active session
+  // Daily total usage
+
+  let totalUsage =
+    data.totalUsage || 0;
+
+
+  // Add current Facebook session
+
   if (
     data.state === "ACTIVE" &&
     data.usageStartedAt
   ) {
-    totalUsage += Date.now() - data.usageStartedAt;
+
+    totalUsage +=
+      Date.now() - data.usageStartedAt;
+
   }
 
-  usage.textContent = formatTime(totalUsage);
+
+  usage.textContent =
+    formatTime(totalUsage);
 }
 
 
-// document.getElementById("start").addEventListener("click", async () => {
+// =========================
+// IMAGE BLUR SETTING
+// =========================
 
-//   await chrome.storage.local.set({
-//     enabled: true,
-//     state: "ACTIVE"
-//   });
+async function loadImageBlurSetting() {
 
-//   updateStatus();
-
-// });
+  const data =
+    await chrome.storage.local.get([
+      "imageBlurEnabled"
+    ]);
 
 
-// document.getElementById("stop").addEventListener("click", async () => {
+  imageBlur.checked =
+    data.imageBlurEnabled === true;
+}
 
-//   await chrome.storage.local.set({
-//     enabled: false,
-//     state: "INACTIVE",
-//     usageStartedAt: null
-//   });
 
-//   await chrome.alarms.clear("usageTimer");
-//   await chrome.alarms.clear("blockTimer");
+// =========================
+// IMAGE BLUR TOGGLE
+// =========================
 
-//   updateStatus();
+imageBlur.addEventListener(
+  "change",
+  async () => {
 
-// });
+    await chrome.storage.local.set({
+      imageBlurEnabled:
+        imageBlur.checked
+    });
 
+  }
+);
+
+
+// =========================
+// INITIALIZE
+// =========================
 
 updateStatus();
 
-setInterval(updateStatus, 1000);
-
-
-async function loadImageBlurSetting() {
-  const data = await chrome.storage.local.get([
-    "imageBlurEnabled"
-  ]);
-
-  imageBlur.checked = data.imageBlurEnabled || false;
-}
-
-imageBlur.addEventListener("change", async () => {
-  await chrome.storage.local.set({
-    imageBlurEnabled: imageBlur.checked
-  });
-});
-
 loadImageBlurSetting();
+
+
+// =========================
+// UPDATE EVERY SECOND
+// =========================
+
+setInterval(
+  updateStatus,
+  1000
+);
