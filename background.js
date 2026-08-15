@@ -1,5 +1,5 @@
 const USAGE_TIME = 5 * 1000;      // 5 minutes
-const BLOCK_TIME = 60 * 60 * 1000;     // 1 hour
+const BLOCK_TIME = 1 * 60 * 1000;     // 1 hour
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({
@@ -54,7 +54,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     });
 
     chrome.alarms.create("blockTimer", {
-      delayInMinutes: 60
+      delayInMinutes: 60 /60
     });
 
     // Reload Facebook tabs so content.js can show blocker
