@@ -11,8 +11,9 @@
     "https://www.facebook.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
-  },
+    "service_worker": "background.js",
+    "type": "module"
+    },
   "content_scripts": [
     {
       "matches": ["https://www.facebook.com/*"],
