@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "SM Blocker",
+  "version": "1.0.0",
+  "description": "Blocks Facebook after 5 minutes.",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.facebook.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
