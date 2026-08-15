@@ -16,6 +16,11 @@
       margin-top: 0;
     }
 
+    #usage {
+      font-size: 32px;
+      margin: 10px 0 20px;
+    }
+
     button {
       width: 100%;
       padding: 10px;
@@ -46,17 +51,16 @@
 
   <h2>SM Blocker</h2>
 
-  <button id="start">Start</button>
-  <button id="stop">Stop</button>
+  <p>Today's Facebook Usage</p>
 
-  <div id="status">Loading...</div>
+  <div id="usage">0s</div>
+
+  <div id="status">Loading...</div> 
+
+    <!-- <button id="start">Start</button>
+    <button id="stop">Stop</button> --> 
 
   <script src="popup.js"></script>
-  
-  <div>
-    <p>Today's Facebook Usage</p>
-    <h2 id="usage">0s</h2>
-  </div>
 
 </body>
 </html>

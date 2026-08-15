@@ -47,32 +47,32 @@ async function updateStatus() {
 }
 
 
-document.getElementById("start").addEventListener("click", async () => {
+// document.getElementById("start").addEventListener("click", async () => {
 
-  await chrome.storage.local.set({
-    enabled: true,
-    state: "ACTIVE"
-  });
+//   await chrome.storage.local.set({
+//     enabled: true,
+//     state: "ACTIVE"
+//   });
 
-  updateStatus();
+//   updateStatus();
 
-});
+// });
 
 
-document.getElementById("stop").addEventListener("click", async () => {
+// document.getElementById("stop").addEventListener("click", async () => {
 
-  await chrome.storage.local.set({
-    enabled: false,
-    state: "INACTIVE",
-    usageStartedAt: null
-  });
+//   await chrome.storage.local.set({
+//     enabled: false,
+//     state: "INACTIVE",
+//     usageStartedAt: null
+//   });
 
-  await chrome.alarms.clear("usageTimer");
-  await chrome.alarms.clear("blockTimer");
+//   await chrome.alarms.clear("usageTimer");
+//   await chrome.alarms.clear("blockTimer");
 
-  updateStatus();
+//   updateStatus();
 
-});
+// });
 
 
 updateStatus();

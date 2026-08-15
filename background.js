@@ -14,8 +14,8 @@ import {
 } from "./services/usageTracker.js";
 
 
-const USAGE_TIME = 5 * 1000;          // Testing: 5 seconds
-const BLOCK_TIME = 60 * 60 * 1000;    // 1 hour
+const USAGE_TIME = 50 * 1000;          // Testing: 5 seconds
+const BLOCK_TIME = 60 * 1000;    // 1 hour
 
 
 // Extension installed
