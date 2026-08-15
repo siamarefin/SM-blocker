@@ -1,4 +1,4 @@
-const USAGE_TIME = 5 * 60 * 1000;      // 5 minutes
+const USAGE_TIME = 5 * 1000;      // 5 minutes
 const BLOCK_TIME = 60 * 60 * 1000;     // 1 hour
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -35,7 +35,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     });
 
     chrome.alarms.create("usageTimer", {
-      delayInMinutes: 5
+      delayInMinutes: 5 / 60
     });
   }
 });
