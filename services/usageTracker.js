@@ -1,12 +1,29 @@
-import { getData, setData } from "./storage.js";
+import {
+  getData,
+  setData
+} from "./storage.js";
 
 function getToday() {
   return new Date().toISOString().split("T")[0];
 }
 
 export async function startSession() {
+  const data = await getData([
+    "usageStartedAt"
+  ]);
+
+  if (data.usageStartedAt) {
+    return;
+  }
+
   await setData({
     usageStartedAt: Date.now()
+  });
+}
+
+export async function resetSession() {
+  await setData({
+    usageStartedAt: null
   });
 }
 
@@ -18,7 +35,7 @@ export async function finishSession() {
   ]);
 
   if (!data.usageStartedAt) {
-    return;
+    return 0;
   }
 
   const usedTime = Date.now() - data.usageStartedAt;
@@ -30,14 +47,14 @@ export async function finishSession() {
       totalUsage: usedTime,
       usageStartedAt: null
     });
-
-    return;
+  } else {
+    await setData({
+      totalUsage: (data.totalUsage || 0) + usedTime,
+      usageStartedAt: null
+    });
   }
 
-  await setData({
-    totalUsage: (data.totalUsage || 0) + usedTime,
-    usageStartedAt: null
-  });
+  return usedTime;
 }
 
 export async function getTodayUsage() {

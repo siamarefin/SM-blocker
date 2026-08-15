@@ -10,113 +10,219 @@ import {
 
 import {
   startSession,
+  resetSession,
   finishSession
 } from "./services/usageTracker.js";
 
 
-const USAGE_TIME = 50 * 1000;          // Testing: 5 seconds
+const USAGE_TIME = 60 * 1000;          // Testing: 5 seconds
 const BLOCK_TIME = 60 * 1000;    // 1 hour
 
 
-// Extension installed
-chrome.runtime.onInstalled.addListener(async () => {
+function isFacebook(url) {
+  return url && url.includes("facebook.com");
+}
 
-  await setData({
-    enabled: true,
-    state: "ACTIVE",
-    usageStartedAt: null,
-    blockedUntil: null,
-    today: new Date().toISOString().split("T")[0],
-    totalUsage: 0,
-    imageBlurEnabled: false
+
+async function getActiveTab() {
+  const tabs = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true
   });
 
-});
+  return tabs[0];
+}
 
 
-// Facebook opened
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+// -------------------------
+// RESET
+// -------------------------
 
-  if (!tab.url || !tab.url.includes("facebook.com")) {
-    return;
-  }
+async function resetFacebookSession() {
+
+  await clearTimer("usageTimer");
+
+  await resetSession();
+
+}
+
+
+// -------------------------
+// START
+// -------------------------
+
+async function startFacebookSession() {
 
   const data = await getData([
-    "enabled",
     "state",
     "usageStartedAt"
   ]);
-
-  if (!data.enabled) {
-    return;
-  }
 
   if (data.state === "BLOCKED") {
     return;
   }
 
-  // Start a new Facebook session
-  if (!data.usageStartedAt) {
-
-    await startSession();
-
-    await setData({
-      state: "ACTIVE"
-    });
-
-    await createTimer(
-      "usageTimer",
-      USAGE_TIME
-    );
+  if (data.usageStartedAt) {
+    return;
   }
+
+  const tab = await getActiveTab();
+
+  if (!tab || !isFacebook(tab.url)) {
+    return;
+  }
+
+  await startSession();
+
+  await setData({
+    state: "ACTIVE"
+  });
+
+  await createTimer(
+    "usageTimer",
+    USAGE_TIME
+  );
+}
+
+
+// -------------------------
+// ACTIVE TAB CHANGED
+// -------------------------
+
+chrome.tabs.onActivated.addListener(async () => {
+
+  const tab = await getActiveTab();
+
+  if (!tab || !isFacebook(tab.url)) {
+
+    await resetFacebookSession();
+
+    return;
+  }
+
+  await startFacebookSession();
 
 });
 
 
-// Timer events
-chrome.alarms.onAlarm.addListener(async (alarm) => {
+// -------------------------
+// WINDOW FOCUS CHANGED
+// -------------------------
+
+chrome.windows.onFocusChanged.addListener(async () => {
+
+  const tab = await getActiveTab();
+
+  if (!tab || !isFacebook(tab.url)) {
+
+    await resetFacebookSession();
+
+    return;
+  }
+
+  await startFacebookSession();
+
+});
 
 
-  // =========================
-  // 5 MINUTE / TEST TIMER
-  // =========================
+// -------------------------
+// TAB URL CHANGED
+// -------------------------
 
-  if (alarm.name === "usageTimer") {
+chrome.tabs.onUpdated.addListener(
+  async (tabId, changeInfo, tab) => {
 
-    // Save today's usage
+    if (!changeInfo.url && changeInfo.status !== "complete") {
+      return;
+    }
+
+    const activeTab = await getActiveTab();
+
+    if (!activeTab || activeTab.id !== tabId) {
+      return;
+    }
+
+
+    if (isFacebook(tab.url)) {
+
+      await startFacebookSession();
+
+    } else {
+
+      await resetFacebookSession();
+
+    }
+
+  }
+);
+
+
+// -------------------------
+// ALARM
+// -------------------------
+
+chrome.alarms.onAlarm.addListener(
+  async (alarm) => {
+
+    if (alarm.name !== "usageTimer") {
+      return;
+    }
+
+
+    // VERY IMPORTANT:
+    // Check Facebook is STILL active
+
+    const activeTab = await getActiveTab();
+
+    if (!activeTab || !isFacebook(activeTab.url)) {
+
+      await resetFacebookSession();
+
+      return;
+    }
+
+
+    // 5 continuous minutes completed
+
     await finishSession();
 
-    const blockedUntil =
-      Date.now() + BLOCK_TIME;
 
     await setData({
       state: "BLOCKED",
-      blockedUntil: blockedUntil
+      blockedUntil: Date.now() + BLOCK_TIME,
+      usageStartedAt: null
     });
 
-    // Start 1 hour cooldown
+
     await createTimer(
       "blockTimer",
       BLOCK_TIME
     );
 
-    // Reload Facebook
-    const tabs = await chrome.tabs.query({
+
+    const facebookTabs = await chrome.tabs.query({
       url: ["https://www.facebook.com/*"]
     });
 
-    for (const tab of tabs) {
+
+    for (const tab of facebookTabs) {
       chrome.tabs.reload(tab.id);
     }
 
   }
+);
 
 
-  // =========================
-  // 1 HOUR COOLDOWN
-  // =========================
+// -------------------------
+// BLOCK FINISHED
+// -------------------------
 
-  if (alarm.name === "blockTimer") {
+chrome.alarms.onAlarm.addListener(
+  async (alarm) => {
+
+    if (alarm.name !== "blockTimer") {
+      return;
+    }
 
     await setData({
       state: "ACTIVE",
@@ -124,18 +230,5 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       usageStartedAt: null
     });
 
-    // Remove old timers if any
-    await clearTimer("usageTimer");
-
-    // Reload Facebook
-    const tabs = await chrome.tabs.query({
-      url: ["https://www.facebook.com/*"]
-    });
-
-    for (const tab of tabs) {
-      chrome.tabs.reload(tab.id);
-    }
-
   }
-
-});
+);
