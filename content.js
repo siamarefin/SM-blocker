@@ -1,3 +1,5 @@
+
+
 (async () => {
   const data = await chrome.storage.local.get([
     "enabled",
@@ -85,3 +87,30 @@
 
   setInterval(updateCountdown, 1000);
 })();
+
+
+async function initializeImageBlur() {
+  const data = await chrome.storage.local.get([
+    "imageBlurEnabled"
+  ]);
+
+  if (data.imageBlurEnabled) {
+    window.imageBlur.enable();
+  }
+}
+
+initializeImageBlur();
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+
+  if (!changes.imageBlurEnabled) return;
+
+  const enabled = changes.imageBlurEnabled.newValue;
+
+  if (enabled) {
+    window.imageBlur.enable();
+  } else {
+    window.imageBlur.disable();
+  }
+});

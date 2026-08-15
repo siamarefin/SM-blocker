@@ -1,5 +1,8 @@
 const status = document.getElementById("status");
 const usage = document.getElementById("usage");
+const imageBlur = document.getElementById("imageBlur");
+
+
 
 function formatTime(milliseconds) {
   const totalSeconds = Math.floor(milliseconds / 1000);
@@ -78,3 +81,20 @@ async function updateStatus() {
 updateStatus();
 
 setInterval(updateStatus, 1000);
+
+
+async function loadImageBlurSetting() {
+  const data = await chrome.storage.local.get([
+    "imageBlurEnabled"
+  ]);
+
+  imageBlur.checked = data.imageBlurEnabled || false;
+}
+
+imageBlur.addEventListener("change", async () => {
+  await chrome.storage.local.set({
+    imageBlurEnabled: imageBlur.checked
+  });
+});
+
+loadImageBlurSetting();

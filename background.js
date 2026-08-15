@@ -27,7 +27,8 @@ chrome.runtime.onInstalled.addListener(async () => {
     usageStartedAt: null,
     blockedUntil: null,
     today: new Date().toISOString().split("T")[0],
-    totalUsage: 0
+    totalUsage: 0,
+    imageBlurEnabled: false
   });
 
 });

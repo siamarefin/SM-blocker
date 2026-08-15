@@ -15,11 +15,16 @@
     "type": "module"
     },
   "content_scripts": [
-    {
-      "matches": ["https://www.facebook.com/*"],
-      "js": ["content.js"]
-    }
-  ],
+  {
+    "matches": [
+      "https://www.facebook.com/*"
+    ],
+    "js": [
+      "services/imageBlur.js",
+      "content.js"
+    ]
+  }
+],
   "action": {
     "default_popup": "popup.html"
   }
